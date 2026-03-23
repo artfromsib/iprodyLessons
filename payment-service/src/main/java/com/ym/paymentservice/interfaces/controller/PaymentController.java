@@ -1,7 +1,7 @@
 package com.ym.paymentservice.interfaces.controller;
 
 import com.ym.paymentservice.application.service.PaymentService;
-import com.ym.paymentservice.domain.model.PaymentStatus;
+import com.ym.paymentservice.domain.model.enums.PaymentStatus;
 import com.ym.paymentservice.interfaces.dto.PayResponseDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentRequestDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentResponseDTO;
