@@ -5,17 +5,10 @@ import com.ym.orderservice.domain.model.valueobject.OrderStatus;
 import com.ym.orderservice.infrastructure.client.PaymentService;
 import com.ym.orderservice.infrastructure.web.dto.OrderRequest;
 import com.ym.orderservice.infrastructure.web.dto.OrderResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -25,37 +18,24 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/orders")
 @RequiredArgsConstructor
-@Tag(name = "Order Management", description = "API для управления заказами")
-public class OrderController {
+public class OrderController implements OrderControllerDoc {
 
   private final OrderService orderService;
   private final PaymentService paymentService;
-  @PostMapping
-  @Operation(summary = "Создать новый заказ",
-          description = "Создает заказ на основе переданных данных")
-  @ApiResponses(value = {
-          @ApiResponse(responseCode = "201", description = "Заказ успешно создан"),
-          @ApiResponse(responseCode = "400", description = "Неверные данные запроса")
-  })
+
+  @Override
   public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
     OrderResponse response = orderService.createOrder(request);
     return new ResponseEntity<>(response, HttpStatus.CREATED);
   }
-  @PostMapping("/pay/{orderId}")
-  @Operation(summary = "Оплатить заказ",
-          description = "Выполняет оплату существующего заказа")
-  @ApiResponses(value = {
-          @ApiResponse(responseCode = "200", description = "Оплата успешно выполнена"),
-          @ApiResponse(responseCode = "402", description = "Оплата не прошла"),
-          @ApiResponse(responseCode = "404", description = "Заказ не найден")
-  })
-  public  ResponseEntity<?> payOrder(@PathVariable("orderId") UUID id) {
+
+  @Override
+  public ResponseEntity<?> payOrder(@PathVariable("orderId") UUID id) {
     try {
       OrderResponse response = orderService.getOrder(id);
       Optional<OrderResponse> order = paymentService.payOrder(response);
-      if(order.isPresent()) {
+      if (order.isPresent()) {
         OrderResponse updatedOrder = orderService.updateOrderStatus(id, OrderStatus.PAID);
         return ResponseEntity.ok(updatedOrder);
       } else {
@@ -63,18 +43,11 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(updatedOrder);
       }
     } catch (RuntimeException e) {
-        return handleException(e, id);
+      return handleException(e, id);
     }
   }
 
-  @GetMapping("/{id}")
-  @Operation(summary = "Получить заказ по ID",
-          description = "Возвращает информацию о заказе")
-  @ApiResponses(value = {
-          @ApiResponse(responseCode = "200", description = "Заказ найден"),
-          @ApiResponse(responseCode = "404", description = "Заказ не найден",
-                  content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
-  })
+  @Override
   public ResponseEntity<?> getOrder(@PathVariable UUID id) {
     try {
       OrderResponse response = orderService.getOrder(id);
@@ -84,32 +57,19 @@ public class OrderController {
     }
   }
 
-
-  @GetMapping
-  @Operation(summary = "Получить все заказы",
-          description = "Возвращает список всех заказов")
-  @ApiResponse(responseCode = "200", description = "Список заказов успешно получен")
+  @Override
   public ResponseEntity<List<OrderResponse>> getAllOrders() {
     List<OrderResponse> responses = orderService.getAllOrders();
     return ResponseEntity.ok(responses);
   }
 
-  @GetMapping("/customer/{customerId}")
-  @Operation(summary = "Получить заказы клиента",
-          description = "Возвращает список заказов конкретного клиента")
-  @ApiResponse(responseCode = "200", description = "Список заказов успешно получен")
+  @Override
   public ResponseEntity<List<OrderResponse>> getOrdersByCustomer(@PathVariable Long customerId) {
     List<OrderResponse> responses = orderService.getOrdersByCustomer(customerId);
     return ResponseEntity.ok(responses);
   }
 
-  @PatchMapping("/{id}/status")
-  @Operation(summary = "Обновить статус заказа",
-          description = "Изменяет статус существующего заказа")
-  @ApiResponses(value = {
-          @ApiResponse(responseCode = "200", description = "Статус успешно обновлен"),
-          @ApiResponse(responseCode = "404", description = "Заказ не найден")
-  })
+  @Override
   public ResponseEntity<OrderResponse> updateOrderStatus(
           @PathVariable UUID id,
           @RequestParam OrderStatus status) {
@@ -117,13 +77,7 @@ public class OrderController {
     return ResponseEntity.ok(response);
   }
 
-  @PatchMapping("/{id}/notes")
-  @Operation(summary = "Добавить заметку к заказу",
-          description = "Добавляет текстовую заметку к заказу")
-  @ApiResponses(value = {
-          @ApiResponse(responseCode = "200", description = "Заметка добавлена"),
-          @ApiResponse(responseCode = "404", description = "Заказ не найден")
-  })
+  @Override
   public ResponseEntity<OrderResponse> addOrderNotes(
           @PathVariable UUID id,
           @RequestBody String notes) {
@@ -131,13 +85,7 @@ public class OrderController {
     return ResponseEntity.ok(response);
   }
 
-  @DeleteMapping("/{id}")
-  @Operation(summary = "Удалить заказ",
-          description = "Удаляет существующий заказ")
-  @ApiResponses(value = {
-          @ApiResponse(responseCode = "204", description = "Заказ успешно удален"),
-          @ApiResponse(responseCode = "404", description = "Заказ не найден")
-  })
+  @Override
   public ResponseEntity<Void> deleteOrder(@PathVariable UUID id) {
     orderService.deleteOrder(id);
     return ResponseEntity.noContent().build();
