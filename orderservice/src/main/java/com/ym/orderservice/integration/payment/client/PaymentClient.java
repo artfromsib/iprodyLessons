@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Component
@@ -20,7 +21,7 @@ public class PaymentClient {
 
   public PayResponseDTO payOrder(PayRequestDTO req) {
     try {
-      return paymentFeignClient.payOrder(req);
+      return paymentFeignClient.payOrder(req, req.orderId());
     } catch (FeignException ex) {
       return processException(ex);
     }

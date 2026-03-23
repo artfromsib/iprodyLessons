@@ -1,6 +1,7 @@
 package com.ym.paymentservice.domain.model;
 
 
+import com.ym.paymentservice.domain.model.enums.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

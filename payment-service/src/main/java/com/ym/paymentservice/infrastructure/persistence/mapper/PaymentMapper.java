@@ -2,10 +2,10 @@ package com.ym.paymentservice.infrastructure.persistence.mapper;
 
 
 import com.ym.paymentservice.domain.model.*;
+import com.ym.paymentservice.domain.model.enums.PaymentStatus;
 import com.ym.paymentservice.infrastructure.persistence.entity.PaymentEntity;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.Currency;
 
 @Component

@@ -1,6 +1,7 @@
 package com.ym.paymentservice.application.service;
 
 import com.ym.paymentservice.domain.model.*;
+import com.ym.paymentservice.domain.model.enums.PaymentStatus;
 import com.ym.paymentservice.domain.repository.PaymentRepository;
 import com.ym.paymentservice.interfaces.dto.PaymentRequestDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentResponseDTO;
