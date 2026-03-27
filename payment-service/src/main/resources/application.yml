@@ -35,3 +35,24 @@ springdoc:
       path: /swagger-ui.html
       operations-sorter: alpha
       tags-sorter: alpha
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentControllerCircuitBreaker:
+        recordExceptions:
+          - feign.FeignException.InternalServerError
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.dao.DataAccessException
+        ignoreException:
+          - java.lang.RuntimeException
+          - java.lang.IllegalArgumentException
+          - com.ym.paymentservice.interfaces.exception.PaymentNotFoundException
+          - com.ym.paymentservice.interfaces.exception.IdempotencyKeyExistsException
+
+        failureRateThreshold: 50
+        slidingWindowSize: 50
+        permittedNumbersOfCallsInHalfOpenState: 10
+        minimumNumbersOfCalls: 10
+        waitDurationInOpenState: 10s

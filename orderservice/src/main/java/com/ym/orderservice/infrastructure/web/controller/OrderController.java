@@ -5,6 +5,7 @@ import com.ym.orderservice.domain.model.valueobject.OrderStatus;
 import com.ym.orderservice.infrastructure.client.PaymentService;
 import com.ym.orderservice.infrastructure.web.dto.OrderRequest;
 import com.ym.orderservice.infrastructure.web.dto.OrderResponse;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
+@CircuitBreaker(name = "orderControllerCircuitBreaker")
 public class OrderController implements OrderControllerDoc {
 
   private final OrderService orderService;
