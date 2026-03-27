@@ -4,6 +4,7 @@ import com.ym.deliveryservice.application.service.ShipmentService;
 import com.ym.deliveryservice.interfaces.dto.ShipmentResponseDTO;
 import com.ym.deliveryservice.interfaces.dto.ShipmentUpdateDTO;
 import com.ym.deliveryservice.interfaces.dto.ShipmentRequestDTO;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@CircuitBreaker(name = "shipmentControllerCircuitBreaker")
 public class ShipmentController implements ShipmentControllerDoc {
 
   private final ShipmentService shipmentService;

@@ -35,3 +35,48 @@ springdoc:
       path: /swagger-ui.html
       operations-sorter: alpha
       tags-sorter: alpha
+
+resilience4j:
+  retry:
+    instances:
+      paymentServiceRetry:
+        maxAttempts: 3
+        waitDuration: 500ms
+        retryExceptions:
+          - feign.FeignException
+        ignoreExceptions:
+          - java.lang.RuntimeExceptions
+
+  circuitbreaker:
+    instances:
+      paymentServiceCircuitBreaker:
+        recordExceptions:
+          - feign.FeignException.InternalServerError
+        ignoreException:
+          - java.lang.RuntimeException
+
+        failureRateThreshold: 50
+        slidingWindowSize: 50
+        permittedNumbersOfCallsInHalfOpenState: 10
+        minimumNumbersOfCalls: 10
+        waitDurationInOpenState: 10s
+
+      orderControllerCircuitBreaker:
+        recordExceptions:
+          - feign.FeignException.InternalServerError
+          - java.util.concurrent.TimeoutException
+          - org.springframework.dao.DataAccessException
+          -
+        ignoreException:
+          - com.ym.orderservice.application.exception.OrderNotFoundException
+          - com.ym.orderservice.application.exception.CustomerNotFoundException
+          - org.springframework.web.client.HttpClientErrorException
+          - jakarta.validation.ValidationException
+          - java.lang.IllegalArgumentException
+
+        failureRateThreshold: 50
+        slidingWindowSize: 50
+        permittedNumbersOfCallsInHalfOpenState: 10
+        minimumNumbersOfCalls: 10
+        waitDurationInOpenState: 10s
+

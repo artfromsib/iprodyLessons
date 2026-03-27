@@ -1,5 +1,7 @@
 package com.ym.orderservice.application.service;
 
+import com.ym.orderservice.application.exception.CustomerNotFoundException;
+import com.ym.orderservice.application.exception.OrderNotFoundException;
 import com.ym.orderservice.domain.model.aggregate.Order;
 import com.ym.orderservice.domain.model.entity.OrderItem;
 import com.ym.orderservice.domain.model.valueobject.*;
@@ -76,7 +78,7 @@ public class OrderService {
   public OrderResponse getOrder(UUID id) {
     return orderRepository.findById(id)
             .map(OrderResponse::fromDomain)
-            .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+            .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
   }
 
   @Transactional(readOnly = true)
@@ -88,7 +90,7 @@ public class OrderService {
 
   public OrderResponse updateOrderStatus(UUID id, OrderStatus newStatus) {
     Order order = orderRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+            .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
 
     order.updateStatus(newStatus);
     Order updatedOrder = orderRepository.save(order);
@@ -98,7 +100,7 @@ public class OrderService {
 
   public OrderResponse addOrderNotes(UUID id, String notes) {
     Order order = orderRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+            .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
 
     order.addNotes(notes);
     Order updatedOrder = orderRepository.save(order);
@@ -109,7 +111,7 @@ public class OrderService {
 
   public void deleteOrder(UUID id) {
     if (!orderRepository.existsById(id)) {
-      throw new RuntimeException("Order not found with id: " + id);
+      throw new OrderNotFoundException("Order not found with id: " + id);
     }
     orderRepository.deleteById(id);
   }
@@ -123,6 +125,6 @@ public class OrderService {
                     .map(Optional::get)
                     .map(OrderResponse::fromDomain)
                     .collect(Collectors.toList()))
-            .orElseThrow(() -> new RuntimeException("Customer not found with id: " + customerId));
+            .orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + customerId));
   }
 }

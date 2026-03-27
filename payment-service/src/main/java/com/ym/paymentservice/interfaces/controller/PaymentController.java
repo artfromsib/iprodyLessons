@@ -6,6 +6,7 @@ import com.ym.paymentservice.interfaces.dto.PayResponseDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentRequestDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentResponseDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentUpdateDTO;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@CircuitBreaker(name = "paymentControllerCircuitBreaker")
 public class PaymentController implements PaymentControllerDoc {
 
   private final PaymentService paymentService;
