@@ -79,4 +79,17 @@ resilience4j:
         permittedNumbersOfCallsInHalfOpenState: 10
         minimumNumbersOfCalls: 10
         waitDurationInOpenState: 10s
+  bulkhead:
+    instances:
+      paymentServiceBulkhead:
+        maxConcurrentCalls: 5
+        maxWaitDuration: 2s
+  ratelimiter:
+    instances:
+      paymentServiceRateLimiter:
+        limitForPeriod: 10
+        limitRefreshPeriod: 1m
+        timeoutDuration: 1s
+
+
 

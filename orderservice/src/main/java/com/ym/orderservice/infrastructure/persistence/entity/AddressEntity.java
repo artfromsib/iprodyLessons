@@ -15,32 +15,32 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddressEntity {
-  @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-  @Column(nullable = false)
-  private String street;
+    @Column(nullable = false)
+    private String street;
 
-  @Column(nullable = false)
-  private String city;
+    @Column(nullable = false)
+    private String city;
 
-  private String state;
+    private String state;
 
-  @Column(name = "zip_code")
-  private String zipCode;
+    @Column(name = "zip_code")
+    private String zipCode;
 
-  @Column(nullable = false)
-  private String country;
+    @Column(nullable = false)
+    private String country;
 
-  @Column(name = "address_type", nullable = false)
-  @Enumerated(EnumType.STRING)
-  private AddressType addressType;
+    @Column(name = "address_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private AddressType addressType;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "customer_id")
-  private CustomerEntity customer;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private CustomerEntity customer;
 
-  @OneToOne(mappedBy = "shippingAddress")
-  private OrderEntity order;
+    @OneToOne(mappedBy = "shippingAddress")
+    private OrderEntity order;
 }

@@ -4,7 +4,9 @@ import com.ym.orderservice.integration.payment.client.feign.PaymentFeignClient;
 import com.ym.orderservice.integration.payment.dto.request.PayRequestDTO;
 import com.ym.orderservice.integration.payment.dto.response.PayResponseDTO;
 import feign.FeignException;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,36 +20,39 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Component
 public class PaymentClient {
-  private final PaymentFeignClient paymentFeignClient;
-  private final JsonMapper mapper;
-  @Retry(name = "paymentServiceRetry")
-  @CircuitBreaker(name = "paymentServiceCircuitBreaker")
-  public PayResponseDTO payOrder(PayRequestDTO req) {
-    try {
-      return paymentFeignClient.payOrder(req, req.orderId());
-    } catch (FeignException ex) {
-      return processException(ex);
-    }
-  }
+    private final PaymentFeignClient paymentFeignClient;
+    private final JsonMapper mapper;
 
-  private PayResponseDTO processException(FeignException ex) {
-    if (!isErrorAcceptable(ex)) {
-      throw new RuntimeException("Не удалось оплатить заказ");
+    @Retry(name = "paymentServiceRetry")
+    @CircuitBreaker(name = "paymentServiceCircuitBreaker")
+    @Bulkhead(name = "paymentServiceBulkhead")
+    @RateLimiter(name = "paymentServiceRateLimiter")
+    public PayResponseDTO payOrder(PayRequestDTO req) {
+        try {
+            return paymentFeignClient.payOrder(req, req.orderId());
+        } catch (FeignException ex) {
+            return processException(ex);
+        }
     }
 
-    return extractResponseFromException(ex);
-  }
+    private PayResponseDTO processException(FeignException ex) {
+        if (!isErrorAcceptable(ex)) {
+            throw new RuntimeException("Не удалось оплатить заказ");
+        }
 
-  private boolean isErrorAcceptable(FeignException ex) {
-    HttpStatusCode statusCode = HttpStatusCode.valueOf(ex.status());
-    return (statusCode.is2xxSuccessful() || statusCode.isSameCodeAs(HttpStatus.CONFLICT))
-            && ex.responseBody().isPresent();
-  }
+        return extractResponseFromException(ex);
+    }
 
-  private PayResponseDTO extractResponseFromException(FeignException ex) {
-    ByteBuffer body = ex.responseBody()
-            .orElseThrow(() -> new RuntimeException("Тело ответа отсутствует"));
+    private boolean isErrorAcceptable(FeignException ex) {
+        HttpStatusCode statusCode = HttpStatusCode.valueOf(ex.status());
+        return (statusCode.is2xxSuccessful() || statusCode.isSameCodeAs(HttpStatus.CONFLICT))
+                && ex.responseBody().isPresent();
+    }
 
-    return mapper.readValue(body.array(), PayResponseDTO.class);
-  }
+    private PayResponseDTO extractResponseFromException(FeignException ex) {
+        ByteBuffer body = ex.responseBody()
+                .orElseThrow(() -> new RuntimeException("Тело ответа отсутствует"));
+
+        return mapper.readValue(body.array(), PayResponseDTO.class);
+    }
 }

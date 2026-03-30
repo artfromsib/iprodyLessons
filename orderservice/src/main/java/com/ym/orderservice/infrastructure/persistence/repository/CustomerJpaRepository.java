@@ -10,7 +10,9 @@ import java.util.UUID;
 
 @Repository
 public interface CustomerJpaRepository extends JpaRepository<CustomerEntity, UUID> {
-  Optional<CustomerEntity> findByCustomerId(Long customerId);
-  Optional<CustomerEntity> findByEmail(String email);
-  boolean existsByCustomerId(Long customerId);
+    Optional<CustomerEntity> findByCustomerId(Long customerId);
+
+    Optional<CustomerEntity> findByEmail(String email);
+
+    boolean existsByCustomerId(Long customerId);
 }

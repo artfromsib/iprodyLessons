@@ -17,29 +17,30 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class IdempotencyServiceImpl implements IdempotencyService {
 
-  private final IdempotencyRepository repository;
+    private final IdempotencyRepository repository;
 
-  @Override
-  public Optional<IdempotencyKey> getByKey(String key) {
-    return repository.findById(key);
-  }
-
-  @Override
-  public void markKeyAsCompleted(String key, String responseData, int statusCode) {
-    var keyEntity = getByKey(key).orElseThrow(() -> new EntityNotFoundException("Key not found"));
-    keyEntity.setStatus(KeyStatus.COMPLETED);
-    keyEntity.setResponse(responseData);
-    keyEntity.setStatusCode(statusCode);
-    repository.save(keyEntity);
-  }
-  @Transactional
-  @Override
-  public void createPendingKey(String key) {
-    var newKey = new IdempotencyKey(key, KeyStatus.PENDING);
-    try {
-      repository.save(newKey);
-    } catch (DataIntegrityViolationException e) {
-      throw new IdempotencyKeyExistsException("Key already exists", e);
+    @Override
+    public Optional<IdempotencyKey> getByKey(String key) {
+        return repository.findById(key);
     }
-  }
+
+    @Override
+    public void markKeyAsCompleted(String key, String responseData, int statusCode) {
+        var keyEntity = getByKey(key).orElseThrow(() -> new EntityNotFoundException("Key not found"));
+        keyEntity.setStatus(KeyStatus.COMPLETED);
+        keyEntity.setResponse(responseData);
+        keyEntity.setStatusCode(statusCode);
+        repository.save(keyEntity);
+    }
+
+    @Transactional
+    @Override
+    public void createPendingKey(String key) {
+        var newKey = new IdempotencyKey(key, KeyStatus.PENDING);
+        try {
+            repository.save(newKey);
+        } catch (DataIntegrityViolationException e) {
+            throw new IdempotencyKeyExistsException("Key already exists", e);
+        }
+    }
 }

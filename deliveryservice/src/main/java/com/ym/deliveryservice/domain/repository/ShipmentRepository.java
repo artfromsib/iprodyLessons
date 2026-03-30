@@ -9,11 +9,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ShipmentRepository {
-  Shipment save(Shipment shipment);
-  Optional<Shipment> findById(ShipmentId id);
-  Optional<Shipment> findByTrackingNumber(TrackingNumber trackingNumber);
-  List<Shipment> findAll();
-  List<Shipment> findByStatus(DeliveryStatus status);
-  void deleteById(ShipmentId id);
-  boolean existsById(ShipmentId id);
+    Shipment save(Shipment shipment);
+
+    Optional<Shipment> findById(ShipmentId id);
+
+    Optional<Shipment> findByTrackingNumber(TrackingNumber trackingNumber);
+
+    List<Shipment> findAll();
+
+    List<Shipment> findByStatus(DeliveryStatus status);
+
+    void deleteById(ShipmentId id);
+
+    boolean existsById(ShipmentId id);
 }

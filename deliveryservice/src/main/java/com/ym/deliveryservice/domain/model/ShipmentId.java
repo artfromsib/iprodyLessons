@@ -4,12 +4,12 @@ import lombok.Value;
 
 @Value
 public class ShipmentId {
-  String value;
+    String value;
 
-  public ShipmentId(String value) {
-    if (value == null || value.trim().isEmpty()) {
-      throw new IllegalArgumentException("Shipment ID cannot be empty");
+    public ShipmentId(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("Shipment ID cannot be empty");
+        }
+        this.value = value;
     }
-    this.value = value;
-  }
 }

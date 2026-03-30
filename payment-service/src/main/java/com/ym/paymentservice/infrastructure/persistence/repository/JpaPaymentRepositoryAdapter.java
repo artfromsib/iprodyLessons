@@ -17,36 +17,36 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JpaPaymentRepositoryAdapter implements PaymentRepository {
 
-  private final JpaPaymentRepository jpaPaymentRepository;
-  private final PaymentMapper paymentMapper;
+    private final JpaPaymentRepository jpaPaymentRepository;
+    private final PaymentMapper paymentMapper;
 
-  @Override
-  public Payment save(Payment payment) {
-    PaymentEntity entity = paymentMapper.toEntity(payment);
-    PaymentEntity savedEntity = jpaPaymentRepository.save(entity);
-    return paymentMapper.toDomain(savedEntity);
-  }
+    @Override
+    public Payment save(Payment payment) {
+        PaymentEntity entity = paymentMapper.toEntity(payment);
+        PaymentEntity savedEntity = jpaPaymentRepository.save(entity);
+        return paymentMapper.toDomain(savedEntity);
+    }
 
-  @Override
-  public Optional<Payment> findById(PaymentId id) {
-    return jpaPaymentRepository.findById(id.getValue())
-            .map(paymentMapper::toDomain);
-  }
+    @Override
+    public Optional<Payment> findById(PaymentId id) {
+        return jpaPaymentRepository.findById(id.getValue())
+                .map(paymentMapper::toDomain);
+    }
 
-  @Override
-  public List<Payment> findAll() {
-    return jpaPaymentRepository.findAll().stream()
-            .map(paymentMapper::toDomain)
-            .collect(Collectors.toList());
-  }
+    @Override
+    public List<Payment> findAll() {
+        return jpaPaymentRepository.findAll().stream()
+                .map(paymentMapper::toDomain)
+                .collect(Collectors.toList());
+    }
 
-  @Override
-  public void deleteById(PaymentId id) {
-    jpaPaymentRepository.deleteById(id.getValue());
-  }
+    @Override
+    public void deleteById(PaymentId id) {
+        jpaPaymentRepository.deleteById(id.getValue());
+    }
 
-  @Override
-  public boolean existsById(PaymentId id) {
-    return jpaPaymentRepository.existsById(id.getValue());
-  }
+    @Override
+    public boolean existsById(PaymentId id) {
+        return jpaPaymentRepository.existsById(id.getValue());
+    }
 }
