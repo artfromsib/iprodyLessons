@@ -14,23 +14,24 @@ import java.util.UUID;
 @Repository
 public interface JpaOrderRepository extends JpaRepository<OrderEntity, UUID> {
 
-  List<OrderEntity> findByStatus(String status);
+    List<OrderEntity> findByStatus(String status);
 
-  List<OrderEntity> findByCustomerCustomerId(Long customerId);
+    List<OrderEntity> findByCustomerCustomerId(Long customerId);
 
-  List<OrderEntity> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<OrderEntity> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
-  @Query("SELECT o FROM OrderEntity o ORDER BY o.createdAt DESC")
-  List<OrderEntity> findTopNOrderByCreatedAtDesc(Pageable pageable);
-  default List<OrderEntity> findTopNOrderByCreatedAtDesc(int limit) {
-    return findTopNOrderByCreatedAtDesc(Pageable.ofSize(limit));
-  }
+    @Query("SELECT o FROM OrderEntity o ORDER BY o.createdAt DESC")
+    List<OrderEntity> findTopNOrderByCreatedAtDesc(Pageable pageable);
 
-  @Query("SELECT COUNT(o) FROM OrderEntity o WHERE o.customer.customerId = :customerId")
-  long countByCustomerId(@Param("customerId") Long customerId);
+    default List<OrderEntity> findTopNOrderByCreatedAtDesc(int limit) {
+        return findTopNOrderByCreatedAtDesc(Pageable.ofSize(limit));
+    }
 
-  @Query("SELECT SUM(o.totalAmount) FROM OrderEntity o WHERE o.customer.customerId = :customerId")
-  Double getTotalSpentByCustomer(@Param("customerId") Long customerId);
+    @Query("SELECT COUNT(o) FROM OrderEntity o WHERE o.customer.customerId = :customerId")
+    long countByCustomerId(@Param("customerId") Long customerId);
 
-  boolean existsByCustomerCustomerIdAndStatus(Long customerId, String status);
+    @Query("SELECT SUM(o.totalAmount) FROM OrderEntity o WHERE o.customer.customerId = :customerId")
+    Double getTotalSpentByCustomer(@Param("customerId") Long customerId);
+
+    boolean existsByCustomerCustomerIdAndStatus(Long customerId, String status);
 }

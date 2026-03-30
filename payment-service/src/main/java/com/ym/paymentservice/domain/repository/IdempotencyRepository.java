@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Lock;
 
 import java.util.Optional;
 
-public interface IdempotencyRepository extends JpaRepository<IdempotencyKey,String> {
-  @Lock(LockModeType.PESSIMISTIC_WRITE)
-  Optional<IdempotencyKey> findById(String key);
+public interface IdempotencyRepository extends JpaRepository<IdempotencyKey, String> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<IdempotencyKey> findById(String key);
 }

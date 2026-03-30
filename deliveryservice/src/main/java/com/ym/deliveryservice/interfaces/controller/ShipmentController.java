@@ -18,49 +18,49 @@ import java.util.List;
 @CircuitBreaker(name = "shipmentControllerCircuitBreaker")
 public class ShipmentController implements ShipmentControllerDoc {
 
-  private final ShipmentService shipmentService;
+    private final ShipmentService shipmentService;
 
-  @Override
-  public ResponseEntity<ShipmentResponseDTO> createShipment(@Valid @RequestBody ShipmentRequestDTO request) {
-    ShipmentResponseDTO response = shipmentService.createShipment(request);
-    return new ResponseEntity<>(response, HttpStatus.CREATED);
-  }
+    @Override
+    public ResponseEntity<ShipmentResponseDTO> createShipment(@Valid @RequestBody ShipmentRequestDTO request) {
+        ShipmentResponseDTO response = shipmentService.createShipment(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 
-  @Override
-  public ResponseEntity<ShipmentResponseDTO> getShipment(@PathVariable String id) {
-    ShipmentResponseDTO response = shipmentService.getShipment(id);
-    return ResponseEntity.ok(response);
-  }
+    @Override
+    public ResponseEntity<ShipmentResponseDTO> getShipment(@PathVariable String id) {
+        ShipmentResponseDTO response = shipmentService.getShipment(id);
+        return ResponseEntity.ok(response);
+    }
 
-  @Override
-  public ResponseEntity<ShipmentResponseDTO> getShipmentByTrackingNumber(@PathVariable String trackingNumber) {
-    ShipmentResponseDTO response = shipmentService.getShipmentByTrackingNumber(trackingNumber);
-    return ResponseEntity.ok(response);
-  }
+    @Override
+    public ResponseEntity<ShipmentResponseDTO> getShipmentByTrackingNumber(@PathVariable String trackingNumber) {
+        ShipmentResponseDTO response = shipmentService.getShipmentByTrackingNumber(trackingNumber);
+        return ResponseEntity.ok(response);
+    }
 
-  @Override
-  public ResponseEntity<List<ShipmentResponseDTO>> getAllShipments() {
-    List<ShipmentResponseDTO> responses = shipmentService.getAllShipments();
-    return ResponseEntity.ok(responses);
-  }
+    @Override
+    public ResponseEntity<List<ShipmentResponseDTO>> getAllShipments() {
+        List<ShipmentResponseDTO> responses = shipmentService.getAllShipments();
+        return ResponseEntity.ok(responses);
+    }
 
-  @Override
-  public ResponseEntity<List<ShipmentResponseDTO>> getShipmentsByStatus(@PathVariable String status) {
-    List<ShipmentResponseDTO> responses = shipmentService.getShipmentsByStatus(status);
-    return ResponseEntity.ok(responses);
-  }
+    @Override
+    public ResponseEntity<List<ShipmentResponseDTO>> getShipmentsByStatus(@PathVariable String status) {
+        List<ShipmentResponseDTO> responses = shipmentService.getShipmentsByStatus(status);
+        return ResponseEntity.ok(responses);
+    }
 
-  @Override
-  public ResponseEntity<ShipmentResponseDTO> updateShipment(
-          @PathVariable String id,
-          @Valid @RequestBody ShipmentUpdateDTO updateDTO) {
-    ShipmentResponseDTO response = shipmentService.updateShipment(id, updateDTO);
-    return ResponseEntity.ok(response);
-  }
+    @Override
+    public ResponseEntity<ShipmentResponseDTO> updateShipment(
+            @PathVariable String id,
+            @Valid @RequestBody ShipmentUpdateDTO updateDTO) {
+        ShipmentResponseDTO response = shipmentService.updateShipment(id, updateDTO);
+        return ResponseEntity.ok(response);
+    }
 
-  @Override
-  public ResponseEntity<Void> deleteShipment(@PathVariable String id) {
-    shipmentService.deleteShipment(id);
-    return ResponseEntity.noContent().build();
-  }
+    @Override
+    public ResponseEntity<Void> deleteShipment(@PathVariable String id) {
+        shipmentService.deleteShipment(id);
+        return ResponseEntity.noContent().build();
+    }
 }

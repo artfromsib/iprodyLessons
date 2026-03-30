@@ -4,12 +4,12 @@ import lombok.Value;
 
 @Value
 public class PaymentId {
-  String value;
+    String value;
 
-  public PaymentId(String value) {
-    if (value == null || value.trim().isEmpty()) {
-      throw new IllegalArgumentException("Payment ID cannot be empty");
+    public PaymentId(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("Payment ID cannot be empty");
+        }
+        this.value = value;
     }
-    this.value = value;
-  }
 }

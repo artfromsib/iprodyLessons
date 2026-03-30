@@ -11,6 +11,7 @@ import java.util.UUID;
 
 @Repository
 public interface AddressJpaRepository extends JpaRepository<AddressEntity, UUID> {
-  List<AddressEntity> findByCustomer(CustomerEntity customer);
-  List<AddressEntity> findByCustomerAndAddressType(CustomerEntity customer, AddressType addressType);
+    List<AddressEntity> findByCustomer(CustomerEntity customer);
+
+    List<AddressEntity> findByCustomerAndAddressType(CustomerEntity customer, AddressType addressType);
 }

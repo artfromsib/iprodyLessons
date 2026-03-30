@@ -8,5 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface OrderItemJpaRepository extends JpaRepository<OrderItemEntity, UUID> {
-  void deleteByOrderId(UUID orderId);
+    void deleteByOrderId(UUID orderId);
 }

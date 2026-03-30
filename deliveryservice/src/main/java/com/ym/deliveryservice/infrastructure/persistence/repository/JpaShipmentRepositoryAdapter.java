@@ -19,51 +19,51 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JpaShipmentRepositoryAdapter implements ShipmentRepository {
 
-  private final JpaShipmentRepository jpaShipmentRepository;
-  private final ShipmentMapper shipmentMapper;
+    private final JpaShipmentRepository jpaShipmentRepository;
+    private final ShipmentMapper shipmentMapper;
 
-  @Override
-  public Shipment save(Shipment shipment) {
-    ShipmentEntity entity = shipmentMapper.toEntity(shipment);
-    ShipmentEntity savedEntity = jpaShipmentRepository.save(entity);
-    return shipmentMapper.toDomain(savedEntity);
-  }
+    @Override
+    public Shipment save(Shipment shipment) {
+        ShipmentEntity entity = shipmentMapper.toEntity(shipment);
+        ShipmentEntity savedEntity = jpaShipmentRepository.save(entity);
+        return shipmentMapper.toDomain(savedEntity);
+    }
 
-  @Override
-  public Optional<Shipment> findById(ShipmentId id) {
-    return jpaShipmentRepository.findById(id.getValue())
-            .map(shipmentMapper::toDomain);
-  }
+    @Override
+    public Optional<Shipment> findById(ShipmentId id) {
+        return jpaShipmentRepository.findById(id.getValue())
+                .map(shipmentMapper::toDomain);
+    }
 
-  @Override
-  public Optional<Shipment> findByTrackingNumber(TrackingNumber trackingNumber) {
-    return jpaShipmentRepository.findByTrackingNumber(trackingNumber.getValue())
-            .map(shipmentMapper::toDomain);
-  }
+    @Override
+    public Optional<Shipment> findByTrackingNumber(TrackingNumber trackingNumber) {
+        return jpaShipmentRepository.findByTrackingNumber(trackingNumber.getValue())
+                .map(shipmentMapper::toDomain);
+    }
 
-  @Override
-  public List<Shipment> findAll() {
-    return jpaShipmentRepository.findAll().stream()
-            .map(shipmentMapper::toDomain)
-            .collect(Collectors.toList());
-  }
+    @Override
+    public List<Shipment> findAll() {
+        return jpaShipmentRepository.findAll().stream()
+                .map(shipmentMapper::toDomain)
+                .collect(Collectors.toList());
+    }
 
-  @Override
-  public List<Shipment> findByStatus(DeliveryStatus status) {
-    return jpaShipmentRepository.findByStatus(
-                    ShipmentEntity.DeliveryStatus.valueOf(status.name()))
-            .stream()
-            .map(shipmentMapper::toDomain)
-            .collect(Collectors.toList());
-  }
+    @Override
+    public List<Shipment> findByStatus(DeliveryStatus status) {
+        return jpaShipmentRepository.findByStatus(
+                        ShipmentEntity.DeliveryStatus.valueOf(status.name()))
+                .stream()
+                .map(shipmentMapper::toDomain)
+                .collect(Collectors.toList());
+    }
 
-  @Override
-  public void deleteById(ShipmentId id) {
-    jpaShipmentRepository.deleteById(id.getValue());
-  }
+    @Override
+    public void deleteById(ShipmentId id) {
+        jpaShipmentRepository.deleteById(id.getValue());
+    }
 
-  @Override
-  public boolean existsById(ShipmentId id) {
-    return jpaShipmentRepository.existsById(id.getValue());
-  }
+    @Override
+    public boolean existsById(ShipmentId id) {
+        return jpaShipmentRepository.existsById(id.getValue());
+    }
 }

@@ -17,32 +17,33 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CustomerEntity {
-  @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(name = "id")
-  private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id")
+    private UUID id;
 
-  @Column(name = "customer_id", nullable = false, unique = true)
-  private Long customerId;
+    @Column(name = "customer_id", nullable = false, unique = true)
+    private Long customerId;
 
-  @Column(name = "full_name", nullable = false)
-  private String fullName;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
-  @Column(nullable = false, unique = true)
-  private String email;
+    @Column(nullable = false, unique = true)
+    private String email;
 
-  @Column(nullable = false)
-  private String phone;
+    @Column(nullable = false)
+    private String phone;
 
-  @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<AddressEntity> addresses = new ArrayList<>();
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AddressEntity> addresses = new ArrayList<>();
 
-  @OneToMany(mappedBy = "customer")
-  private List<OrderEntity> orders = new ArrayList<>();
-  @PrePersist
-  public void prePersist() {
-    if (customerId == null) {
-      customerId = System.currentTimeMillis();
+    @OneToMany(mappedBy = "customer")
+    private List<OrderEntity> orders = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        if (customerId == null) {
+            customerId = System.currentTimeMillis();
+        }
     }
-  }
 }

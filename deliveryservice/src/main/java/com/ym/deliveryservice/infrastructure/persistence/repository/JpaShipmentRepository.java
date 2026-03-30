@@ -9,8 +9,11 @@ import java.util.Optional;
 
 @Repository
 public interface JpaShipmentRepository extends JpaRepository<ShipmentEntity, String> {
-  Optional<ShipmentEntity> findByTrackingNumber(String trackingNumber);
-  List<ShipmentEntity> findByStatus(ShipmentEntity.DeliveryStatus status);
-  boolean existsByOrderId(String orderId);
-  boolean existsByTrackingNumber(String trackingNumber);
+    Optional<ShipmentEntity> findByTrackingNumber(String trackingNumber);
+
+    List<ShipmentEntity> findByStatus(ShipmentEntity.DeliveryStatus status);
+
+    boolean existsByOrderId(String orderId);
+
+    boolean existsByTrackingNumber(String trackingNumber);
 }

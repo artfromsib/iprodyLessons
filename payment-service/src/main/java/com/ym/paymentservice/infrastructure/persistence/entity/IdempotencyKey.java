@@ -12,19 +12,19 @@ import lombok.*;
 @AllArgsConstructor
 @EqualsAndHashCode(of = "key")
 public class IdempotencyKey {
-  @Id
-  @Column(name = "key_value")
-  private String key;
+    @Id
+    @Column(name = "key_value")
+    private String key;
 
-  @Enumerated(EnumType.STRING)
-  private KeyStatus status;
-  @Lob
-  private String response;
+    @Enumerated(EnumType.STRING)
+    private KeyStatus status;
+    @Lob
+    private String response;
 
-  private int statusCode;
+    private int statusCode;
 
-  public IdempotencyKey(String key, KeyStatus status) {
-    this.key = key;
-    this.status = status;
-  }
+    public IdempotencyKey(String key, KeyStatus status) {
+        this.key = key;
+        this.status = status;
+    }
 }
