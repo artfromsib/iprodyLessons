@@ -90,6 +90,9 @@ resilience4j:
         limitForPeriod: 10
         limitRefreshPeriod: 1m
         timeoutDuration: 1s
+integration:
+  payment-service:
+    base-url: http://localhost:8081/api/payments
 
 
 

@@ -1,5 +1,6 @@
 package com.ym.paymentservice.infrastructure.web.interceptor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ym.paymentservice.application.service.IdempotencyService;
 import com.ym.paymentservice.domain.model.enums.KeyStatus;
 import com.ym.paymentservice.infrastructure.persistence.entity.IdempotencyKey;
@@ -17,6 +18,7 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.ym.paymentservice.constant.WebConstants.WRAPPED_RESPONSE_ATTRIBUTE_NAME;
@@ -57,7 +59,12 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
         KeyStatus status = idempotencyKey.getStatus();
         if (status == KeyStatus.PENDING) {
             response.setStatus(HttpStatus.CONFLICT.value());
-            response.getWriter().println("Same request is already in progress...");
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            Map<String, String> error = Map.of(
+                    "error", "REQUEST_IN_PROGRESS",
+                    "message", "Same request is already in progress"
+            );
+            response.getWriter().println(new ObjectMapper().writeValueAsString(error));
         } else if (status == KeyStatus.COMPLETED) {
             response.setStatus(idempotencyKey.getStatusCode());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
