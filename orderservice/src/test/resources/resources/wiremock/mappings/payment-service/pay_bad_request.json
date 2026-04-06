@@ -1,0 +1,26 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/api/payments/pay/550e8400-e29b-41d4-a716-446655440001",
+    "headers": {
+      "X-Idempotency-Key": {
+        "equalTo": "550e8400-e29b-41d4-a716-446655440001"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "customerId": 12345,
+          "orderId": "550e8400-e29b-41d4-a716-446655440001",
+          "amount": 99.99,
+          "currency": "USD"
+        },
+        "ignoreArrayOrder": true,
+        "ignoreExtraElements": false
+      }
+    ]
+  },
+  "response": {
+    "status": 400
+  }
+}

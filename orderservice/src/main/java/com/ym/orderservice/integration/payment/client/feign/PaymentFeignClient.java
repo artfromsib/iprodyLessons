@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.UUID;
 
-@FeignClient(name = "payment-service", url = "http://localhost:8081/api/payments")
+@FeignClient(name = "payment-service", url = "${integration.payment-service.base-url:http://localhost:8081/api/payments}")
 public interface PaymentFeignClient {
     @PostMapping("/pay")
     public PayResponseDTO payOrder(@RequestBody PayRequestDTO req, @RequestHeader("X-Idempotency-key") UUID idempotencyKey);
