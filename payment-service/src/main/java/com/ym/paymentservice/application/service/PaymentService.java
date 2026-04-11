@@ -3,7 +3,7 @@ package com.ym.paymentservice.application.service;
 import com.ym.paymentservice.domain.model.*;
 import com.ym.paymentservice.domain.model.enums.PaymentStatus;
 import com.ym.paymentservice.domain.repository.PaymentRepository;
-import com.ym.paymentservice.interfaces.dto.PaymentRequestDTO;
+import com.ym.paymentservice.integration.order.dto.request.PayRequestDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentResponseDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentUpdateDTO;
 import com.ym.paymentservice.interfaces.exception.PaymentNotFoundException;
@@ -24,7 +24,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
 
-    public PaymentResponseDTO payProcess(PaymentRequestDTO request) {
+    public PaymentResponseDTO payProcess(PayRequestDTO request) {
         try {
             return createPayment(request, PaymentStatus.SUCCESS);
         } catch (Exception e) {
@@ -33,31 +33,19 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponseDTO createPayment(PaymentRequestDTO request, PaymentStatus status) {
+    public PaymentResponseDTO createPayment(PayRequestDTO request, PaymentStatus status) {
         PaymentId paymentId = new PaymentId(UUID.randomUUID().toString());
-        OrderId orderId = new OrderId(request.getOrderId());
-        CustomerId customerId = new CustomerId(request.getCustomerId());
+        OrderId orderId = new OrderId(request.orderId().toString());
+        CustomerId customerId = new CustomerId(request.customerId());
 
-        Cost cost = new Cost(request.getAmount(), request.getCurrency());
+        Cost cost = new Cost(request.amount(), request.currency());
 
-
-        PaymentMethod.PaymentMethodType methodType =
-                request.getPaymentMethodType() != null && !request.getPaymentMethodType().trim().isEmpty()
-                        ? PaymentMethod.PaymentMethodType.valueOf(request.getPaymentMethodType())
-                        : null;
-
-        String providerToken =
-                request.getProviderToken() != null && !request.getProviderToken().trim().isEmpty()
-                        ? request.getProviderToken()
-                        : null;
-        PaymentMethod paymentMethod = methodType != null && providerToken != null ? new PaymentMethod(methodType, providerToken) : null;
         Payment payment = Payment.builder()
                 .id(paymentId)
                 .orderId(orderId)
                 .customerId(customerId)
                 .cost(cost)
                 .status(status)
-                .paymentMethod(paymentMethod)
                 .createdAt(LocalDateTime.now())
                 .build();
 

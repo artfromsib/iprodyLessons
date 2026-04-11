@@ -4,10 +4,12 @@ import com.ym.orderservice.domain.model.aggregate.Order;
 import com.ym.orderservice.domain.model.entity.OrderItem;
 import com.ym.orderservice.domain.model.valueobject.Address;
 import com.ym.orderservice.domain.model.valueobject.Customer;
+import com.ym.orderservice.domain.model.valueobject.OrderStatus;
 import com.ym.orderservice.domain.repository.OrderRepository;
 import com.ym.orderservice.infrastructure.persistence.entity.*;
 import com.ym.orderservice.infrastructure.persistence.mapper.OrderMapper;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -197,5 +199,20 @@ public class OrderRepositoryImpl implements OrderRepository {
                         Long.class)
                 .setParameter("customerId", customerId)
                 .getSingleResult();
+    }
+    @Override
+    public void updateOrderStatus(UUID orderId, OrderStatus status) {
+        log.info("Updating order status: orderId={}, newStatus={}", orderId, status);
+
+        OrderEntity orderEntity = entityManager.find(OrderEntity.class, orderId);
+        if (orderEntity == null) {
+            log.error("Order not found with id: {}", orderId);
+            throw new EntityNotFoundException("Order not found with id: " + orderId);
+        }
+
+        orderEntity.setStatus(status);
+        entityManager.merge(orderEntity);
+
+        log.info("Order status updated successfully: orderId={}, newStatus={}", orderId, status);
     }
 }

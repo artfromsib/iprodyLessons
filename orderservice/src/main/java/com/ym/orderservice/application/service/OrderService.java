@@ -6,15 +6,20 @@ import com.ym.orderservice.domain.model.aggregate.Order;
 import com.ym.orderservice.domain.model.entity.OrderItem;
 import com.ym.orderservice.domain.model.valueobject.*;
 import com.ym.orderservice.domain.repository.OrderRepository;
-import com.ym.orderservice.infrastructure.persistence.entity.AddressType;
 import com.ym.orderservice.infrastructure.persistence.repository.AddressJpaRepository;
 import com.ym.orderservice.infrastructure.persistence.repository.CustomerJpaRepository;
 import com.ym.orderservice.infrastructure.web.dto.OrderRequest;
 import com.ym.orderservice.infrastructure.web.dto.OrderResponse;
+import com.ym.orderservice.integration.payment.config.properties.RabbitMqPaymentServiceProperties;
+import com.ym.orderservice.integration.payment.dto.request.PayRequestDTO;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,13 +28,17 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final CustomerJpaRepository customerJpaRepository;
     private final AddressJpaRepository addressJpaRepository;
 
-    public OrderResponse createOrder(OrderRequest request) {
+    private final RabbitTemplate rabbitTemplate;
+    private final RabbitMqPaymentServiceProperties props;
+
+    public Order createAndSaveOrder(OrderRequest request, OrderStatus status) {
         Address customerAddress = new Address(
                 request.getCustomer().getAddress().getStreet(),
                 request.getCustomer().getAddress().getCity(),
@@ -71,7 +80,7 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        return OrderResponse.fromDomain(savedOrder);
+        return savedOrder;
     }
 
     @Transactional(readOnly = true)
@@ -127,4 +136,36 @@ public class OrderService {
                         .collect(Collectors.toList()))
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + customerId));
     }
+
+    @Transactional
+    public Order createOrder(OrderRequest request) {
+        Order order = createAndSaveOrder(request, OrderStatus.CREATED);
+        sendPayMessage(order);
+        return order;
+    }
+
+    private void sendPayMessage(Order order) {
+        PayRequestDTO requestMessage = PayRequestDTO.builder().orderId(order.getId())
+                .amount(order.getTotalAmount())
+                .currency(Currency.getInstance("USD"))
+                .customerId(order.getCustomer().getId())
+                .build();
+
+        rabbitTemplate.convertAndSend(
+                props.exchangeRequestName(),
+                props.queueRequestName(),
+                requestMessage
+        );
+        log.info("Sent pay request for orderId={}", order.getId());
+    }
+
+    @Transactional
+    public void changeOrderStatus(UUID orderId,
+                                        boolean paid) {
+        OrderStatus newStatus = paid ? OrderStatus.PAID : OrderStatus.PAYMENT_FAILED;
+        log.info("Changing status for orderId={} to={}", orderId, newStatus);
+        orderRepository.updateOrderStatus(orderId, newStatus);
+        log.info("Updated order status for id={}", orderId);
+    }
+
 }
