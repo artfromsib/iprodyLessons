@@ -1,7 +1,7 @@
 package com.ym.paymentservice.interfaces.controller;
 
+import com.ym.paymentservice.integration.order.dto.request.PayRequestDTO;
 import com.ym.paymentservice.interfaces.dto.PayResponseDTO;
-import com.ym.paymentservice.interfaces.dto.PaymentRequestDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentResponseDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentUpdateDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,7 +33,7 @@ public interface PaymentControllerDoc {
     @PostMapping("/pay")
     ResponseEntity<PayResponseDTO> payProcess(
             @Parameter(description = "Данные запроса на оплату", required = true)
-            @RequestBody PaymentRequestDTO request);
+            @RequestBody PayRequestDTO request);
 
     @Operation(
             summary = "Создать платеж",
@@ -47,7 +47,7 @@ public interface PaymentControllerDoc {
     @PostMapping
     ResponseEntity<PaymentResponseDTO> createPayment(
             @Parameter(description = "Данные запроса на создание платежа", required = true)
-            @RequestBody PaymentRequestDTO request);
+            @RequestBody PayRequestDTO request);
 
     @Operation(
             summary = "Получить платеж по ID",

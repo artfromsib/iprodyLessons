@@ -3,6 +3,7 @@ package com.ym.orderservice.domain.model.aggregate;
 import com.ym.orderservice.domain.model.entity.OrderItem;
 import com.ym.orderservice.domain.model.valueobject.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Getter
+@Setter
 public class Order {
     private UUID id;
     private final Customer customer;

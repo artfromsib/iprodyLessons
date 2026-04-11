@@ -2,6 +2,7 @@ package com.ym.paymentservice.interfaces.controller;
 
 import com.ym.paymentservice.application.service.PaymentService;
 import com.ym.paymentservice.domain.model.enums.PaymentStatus;
+import com.ym.paymentservice.integration.order.dto.request.PayRequestDTO;
 import com.ym.paymentservice.interfaces.dto.PayResponseDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentRequestDTO;
 import com.ym.paymentservice.interfaces.dto.PaymentResponseDTO;
@@ -22,18 +23,18 @@ public class PaymentController implements PaymentControllerDoc {
     private final PaymentService paymentService;
 
     @Override
-    public ResponseEntity<PayResponseDTO> payProcess(@RequestBody PaymentRequestDTO request) {
+    public ResponseEntity<PayResponseDTO> payProcess(@RequestBody PayRequestDTO request) {
         try {
             PaymentResponseDTO payment = paymentService.payProcess(request);
             PayResponseDTO response = new PayResponseDTO(true, payment.getOrderId());
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(new PayResponseDTO(false, request.getOrderId()), HttpStatus.PAYMENT_REQUIRED);
+            return new ResponseEntity<>(new PayResponseDTO(false, request.orderId().toString()), HttpStatus.PAYMENT_REQUIRED);
         }
     }
 
     @Override
-    public ResponseEntity<PaymentResponseDTO> createPayment(@RequestBody PaymentRequestDTO request) {
+    public ResponseEntity<PaymentResponseDTO> createPayment(@RequestBody PayRequestDTO request) {
         PaymentResponseDTO response = paymentService.createPayment(request, PaymentStatus.PENDING);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

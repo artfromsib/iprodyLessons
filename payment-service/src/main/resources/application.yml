@@ -4,7 +4,8 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password: password
-
+  profiles:
+    active: default
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
@@ -19,6 +20,10 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  rabbitmq:
+    username: admin
+    password: admin
+    addresses: amqp://localhost:5672
 
 server:
   port: 8081
@@ -45,7 +50,7 @@ resilience4j:
           - java.io.IOException
           - java.util.concurrent.TimeoutException
           - org.springframework.dao.DataAccessException
-        ignoreException:
+        ignoreExceptions:
           - java.lang.RuntimeException
           - java.lang.IllegalArgumentException
           - com.ym.paymentservice.interfaces.exception.PaymentNotFoundException
@@ -53,6 +58,13 @@ resilience4j:
 
         failureRateThreshold: 50
         slidingWindowSize: 50
-        permittedNumbersOfCallsInHalfOpenState: 10
-        minimumNumbersOfCalls: 10
+        permittedNumberOfCallsInHalfOpenState: 10
+        minimumNumberOfCalls: 10
         waitDurationInOpenState: 10s
+
+rabbitmq:
+  service:
+    order:
+      exchange-response-name: payment-response-exchange
+      queue-response-name: payment-response-queue
+      queue-request-name: payment-request-queue

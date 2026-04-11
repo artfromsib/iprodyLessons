@@ -1,6 +1,7 @@
 package com.ym.orderservice.infrastructure.web.controller;
 
 import com.ym.orderservice.application.service.OrderService;
+import com.ym.orderservice.domain.model.aggregate.Order;
 import com.ym.orderservice.domain.model.valueobject.OrderStatus;
 import com.ym.orderservice.infrastructure.client.PaymentService;
 import com.ym.orderservice.infrastructure.web.dto.OrderRequest;
@@ -28,8 +29,8 @@ public class OrderController implements OrderControllerDoc {
 
     @Override
     public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
-        OrderResponse response = orderService.createOrder(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        Order response = orderService.createOrder(request);
+        return new ResponseEntity<>(OrderResponse.fromDomain(response), HttpStatus.CREATED);
     }
 
     @Override
