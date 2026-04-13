@@ -19,6 +19,26 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  kafka:
+    bootstrap-servers: localhost:9093
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    listener:
+      ack-mode: manual
+      observation-enabled: true
+    template:
+      observation-enabled: true
+    consumer:
+      group-id: delivery-consumers
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.ym.deliveryservice.integration.order.dto.request.OrderPaidRequestMessage
 
 server:
   port: 8082
@@ -45,13 +65,18 @@ resilience4j:
           - java.io.IOException
           - java.util.concurrent.TimeoutException
           - org.springframework.dao.DataAccessException
-        ignoreException:
+        ignoreExceptions:
           - java.lang.RuntimeException
           - java.lang.IllegalArgumentException
-          - com.ym.deliveryservice.interfaces.exception
+          - com.ym.deliveryservice.interfaces.exception.ShipmentNotFoundException
 
         failureRateThreshold: 50
         slidingWindowSize: 50
-        permittedNumbersOfCallsInHalfOpenState: 10
-        minimumNumbersOfCalls: 10
+        permittedNumberOfCallsInHalfOpenState: 10
+        minimumNumberOfCalls: 10
         waitDurationInOpenState: 10s
+kafka:
+  service:
+    delivery:
+      order-paid-topic: order.paid
+      delivery-creation-topic: delivery.creation

@@ -1,9 +1,6 @@
 package com.ym.deliveryservice.domain.repository;
 
-import com.ym.deliveryservice.domain.model.DeliveryStatus;
-import com.ym.deliveryservice.domain.model.Shipment;
-import com.ym.deliveryservice.domain.model.ShipmentId;
-import com.ym.deliveryservice.domain.model.TrackingNumber;
+import com.ym.deliveryservice.domain.model.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +19,5 @@ public interface ShipmentRepository {
     void deleteById(ShipmentId id);
 
     boolean existsById(ShipmentId id);
+    Optional<Shipment> findByOrderId(OrderId orderId);
 }

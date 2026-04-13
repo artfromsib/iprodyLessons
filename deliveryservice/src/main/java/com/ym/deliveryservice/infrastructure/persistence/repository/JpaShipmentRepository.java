@@ -16,4 +16,6 @@ public interface JpaShipmentRepository extends JpaRepository<ShipmentEntity, Str
     boolean existsByOrderId(String orderId);
 
     boolean existsByTrackingNumber(String trackingNumber);
+    Optional<ShipmentEntity> findByOrderId(String orderId);
+
 }

@@ -11,18 +11,6 @@ public class ShippingAddress {
     String country;
 
     public ShippingAddress(String street, String city, String state, String zipCode, String country) {
-        if (street == null || street.trim().isEmpty()) {
-            throw new IllegalArgumentException("Street cannot be empty");
-        }
-        if (city == null || city.trim().isEmpty()) {
-            throw new IllegalArgumentException("City cannot be empty");
-        }
-        if (zipCode == null || zipCode.trim().isEmpty()) {
-            throw new IllegalArgumentException("Zip code cannot be empty");
-        }
-        if (country == null || country.trim().isEmpty()) {
-            throw new IllegalArgumentException("Country cannot be empty");
-        }
 
         this.street = street;
         this.city = city;

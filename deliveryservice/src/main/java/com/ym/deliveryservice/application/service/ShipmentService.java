@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,26 +29,63 @@ public class ShipmentService {
     @Transactional
     public ShipmentResponseDTO createShipment(ShipmentRequestDTO request) {
 
-        if (shipmentRepository.findByTrackingNumber(new TrackingNumber(request.getTrackingNumber())).isPresent()) {
-            throw new IllegalArgumentException("Shipment with tracking number " + request.getTrackingNumber() + " already exists");
+        if (request.getOrderId() == null || request.getOrderId().isBlank()) {
+            throw new IllegalArgumentException("Order ID is required");
+        }
+
+        OrderId orderId = new OrderId(request.getOrderId());
+
+        if (shipmentRepository.findByOrderId(orderId).isPresent()) {
+            throw new IllegalArgumentException("Shipment already exists for order: " + request.getOrderId());
         }
 
         ShipmentId shipmentId = new ShipmentId(UUID.randomUUID().toString());
-        OrderId orderId = new OrderId(request.getOrderId());
-        TrackingNumber trackingNumber = new TrackingNumber(request.getTrackingNumber());
 
-        ShippingAddress address = new ShippingAddress(
-                request.getStreet(),
-                request.getCity(),
-                request.getState(),
-                request.getZipCode(),
-                request.getCountry()
-        );
 
-        ShippingCost cost = new ShippingCost(request.getShippingCost(), request.getCurrency());
+        TrackingNumber trackingNumber;
+        if (request.getTrackingNumber() != null && !request.getTrackingNumber().isBlank()) {
+
+            if (shipmentRepository.findByTrackingNumber(new TrackingNumber(request.getTrackingNumber())).isPresent()) {
+                throw new IllegalArgumentException("Shipment with tracking number " + request.getTrackingNumber() + " already exists");
+            }
+            trackingNumber = new TrackingNumber(request.getTrackingNumber());
+        } else {
+            trackingNumber = generateTrackingNumber();
+        }
+
+
+        ShippingAddress address = null;
+        if (request.getStreet() == null || request.getStreet().isBlank()) {
+
+            address = new ShippingAddress(
+                    "Default Street",
+                    "Default City",
+                    "Default State",
+                    "00000",
+                    "Default Country"
+            );
+        } else {
+            address = new ShippingAddress(
+                    request.getStreet(),
+                    request.getCity(),
+                    request.getState(),
+                    request.getZipCode(),
+                    request.getCountry()
+            );
+        }
+        ShippingCost cost;
+        if (request.getShippingCost() != null) {
+            Currency currency = request.getCurrency() != null ? request.getCurrency() : Currency.getInstance("USD");
+            cost = new ShippingCost(request.getShippingCost(), currency);
+        } else {
+            cost = new ShippingCost(BigDecimal.ZERO, Currency.getInstance("USD"));
+        }
 
         LocalDateTime estimatedDelivery = request.getEstimatedDeliveryDate() != null ?
                 request.getEstimatedDeliveryDate() : LocalDateTime.now().plusDays(5);
+
+        DeliveryOption deliveryOption = request.getDeliveryOption() != null ?
+                request.getDeliveryOption() : DeliveryOption.POST;
 
         Shipment shipment = Shipment.builder()
                 .id(shipmentId)
@@ -54,17 +93,29 @@ public class ShipmentService {
                 .trackingNumber(trackingNumber)
                 .shippingAddress(address)
                 .status(DeliveryStatus.PENDING)
-                .deliveryOption(request.getDeliveryOption())
+                .deliveryOption(deliveryOption)
                 .shippingCost(cost)
                 .createdAt(LocalDateTime.now())
                 .estimatedDeliveryDate(estimatedDelivery)
                 .build();
 
         Shipment savedShipment = shipmentRepository.save(shipment);
-        log.info("Shipment created with ID: {}, Tracking: {}",
-                savedShipment.getId().getValue(), savedShipment.getTrackingNumber().getValue());
+        log.info("Shipment created with ID: {}, Order ID: {}, Tracking: {}",
+                savedShipment.getId().getValue(),
+                savedShipment.getOrderId().getValue(),
+                savedShipment.getTrackingNumber().getValue());
 
         return ShipmentResponseDTO.fromDomain(savedShipment);
+    }
+    private TrackingNumber generateTrackingNumber() {
+        String trackingNumber;
+        do {
+            String timestamp = String.valueOf(System.currentTimeMillis()).substring(8);
+            String random = UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+            trackingNumber = "SHIP" + timestamp + random;
+        } while (shipmentRepository.findByTrackingNumber(new TrackingNumber(trackingNumber)).isPresent());
+
+        return new TrackingNumber(trackingNumber);
     }
 
     @Transactional(readOnly = true)
