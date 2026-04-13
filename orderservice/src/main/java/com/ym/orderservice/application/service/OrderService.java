@@ -10,12 +10,15 @@ import com.ym.orderservice.infrastructure.persistence.repository.AddressJpaRepos
 import com.ym.orderservice.infrastructure.persistence.repository.CustomerJpaRepository;
 import com.ym.orderservice.infrastructure.web.dto.OrderRequest;
 import com.ym.orderservice.infrastructure.web.dto.OrderResponse;
+import com.ym.orderservice.integration.delivery.dto.request.OrderPaidRequestMessage;
 import com.ym.orderservice.integration.payment.config.properties.RabbitMqPaymentServiceProperties;
 import com.ym.orderservice.integration.payment.dto.request.PayRequestDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +40,9 @@ public class OrderService {
 
     private final RabbitTemplate rabbitTemplate;
     private final RabbitMqPaymentServiceProperties props;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    @Value("${kafka.service.delivery.order-paid-topic}")
+    private String orderPaidTopic;
 
     public Order createAndSaveOrder(OrderRequest request, OrderStatus status) {
         Address customerAddress = new Address(
@@ -161,11 +167,19 @@ public class OrderService {
 
     @Transactional
     public void changeOrderStatus(UUID orderId,
-                                        boolean paid) {
+                                  boolean paid) {
         OrderStatus newStatus = paid ? OrderStatus.PAID : OrderStatus.PAYMENT_FAILED;
         log.info("Changing status for orderId={} to={}", orderId, newStatus);
         orderRepository.updateOrderStatus(orderId, newStatus);
         log.info("Updated order status for id={}", orderId);
+        if (newStatus == OrderStatus.PAID) {
+            sendOrderPaidMessage(orderId);
+        }
+    }
+
+    private void sendOrderPaidMessage(UUID orderId) {
+        OrderPaidRequestMessage bookedMessage = new OrderPaidRequestMessage(orderId);
+        kafkaTemplate.send(orderPaidTopic, orderId.toString(), bookedMessage);
     }
 
 }

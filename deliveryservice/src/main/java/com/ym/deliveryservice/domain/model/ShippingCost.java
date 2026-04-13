@@ -11,12 +11,7 @@ public class ShippingCost {
     Currency currency;
 
     public ShippingCost(BigDecimal amount, Currency currency) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Amount must be non-negative");
-        }
-        if (currency == null) {
-            throw new IllegalArgumentException("Currency cannot be null");
-        }
+
         this.amount = amount;
         this.currency = currency;
     }

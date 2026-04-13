@@ -1,10 +1,7 @@
 package com.ym.deliveryservice.infrastructure.persistence.repository;
 
 
-import com.ym.deliveryservice.domain.model.DeliveryStatus;
-import com.ym.deliveryservice.domain.model.Shipment;
-import com.ym.deliveryservice.domain.model.ShipmentId;
-import com.ym.deliveryservice.domain.model.TrackingNumber;
+import com.ym.deliveryservice.domain.model.*;
 import com.ym.deliveryservice.domain.repository.ShipmentRepository;
 import com.ym.deliveryservice.infrastructure.persistence.entity.ShipmentEntity;
 import com.ym.deliveryservice.infrastructure.persistence.mapper.ShipmentMapper;
@@ -65,5 +62,11 @@ public class JpaShipmentRepositoryAdapter implements ShipmentRepository {
     @Override
     public boolean existsById(ShipmentId id) {
         return jpaShipmentRepository.existsById(id.getValue());
+    }
+
+    @Override
+    public Optional<Shipment> findByOrderId(OrderId orderId) {
+        return jpaShipmentRepository.findByOrderId(orderId.getValue())
+                .map(shipmentMapper::toDomain);
     }
 }

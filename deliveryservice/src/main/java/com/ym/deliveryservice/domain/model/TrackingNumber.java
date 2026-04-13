@@ -7,11 +7,11 @@ public class TrackingNumber {
     String value;
 
     public TrackingNumber(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tracking number cannot be empty");
-        }
-        if (!value.matches("^[A-Z0-9]{8,20}$")) {
-            throw new IllegalArgumentException("Tracking number must be 8-20 alphanumeric characters");
+        if (value != null) {
+            if (!value.matches("^[A-Z0-9]{8,20}$")) {
+                throw new IllegalArgumentException("Tracking number must be 8-20 alphanumeric characters");
+            }
+
         }
         this.value = value;
     }
