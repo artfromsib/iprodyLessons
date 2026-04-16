@@ -1,11 +1,16 @@
 package com.ym.orderservice.application.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.ym.orderservice.application.exception.CustomerNotFoundException;
 import com.ym.orderservice.application.exception.OrderNotFoundException;
 import com.ym.orderservice.domain.model.aggregate.Order;
 import com.ym.orderservice.domain.model.entity.OrderItem;
 import com.ym.orderservice.domain.model.valueobject.*;
 import com.ym.orderservice.domain.repository.OrderRepository;
+import com.ym.orderservice.infrastructure.persistence.entity.async.AsyncMessage;
+import com.ym.orderservice.infrastructure.persistence.enums.AsyncMessageStatus;
+import com.ym.orderservice.infrastructure.persistence.enums.AsyncMessageType;
 import com.ym.orderservice.infrastructure.persistence.repository.AddressJpaRepository;
 import com.ym.orderservice.infrastructure.persistence.repository.CustomerJpaRepository;
 import com.ym.orderservice.infrastructure.web.dto.OrderRequest;
@@ -21,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Currency;
 import java.util.List;
@@ -40,9 +46,11 @@ public class OrderService {
 
     private final RabbitTemplate rabbitTemplate;
     private final RabbitMqPaymentServiceProperties props;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
     @Value("${kafka.service.delivery.order-paid-topic}")
     private String orderPaidTopic;
+    private final AsyncMessageService asyncMessageService;
+    private final ObjectMapper objectMapper;
+
 
     public Order createAndSaveOrder(OrderRequest request, OrderStatus status) {
         Address customerAddress = new Address(
@@ -167,19 +175,29 @@ public class OrderService {
 
     @Transactional
     public void changeOrderStatus(UUID orderId,
-                                  boolean paid) {
+                                  boolean paid) throws JsonProcessingException {
         OrderStatus newStatus = paid ? OrderStatus.PAID : OrderStatus.PAYMENT_FAILED;
         log.info("Changing status for orderId={} to={}", orderId, newStatus);
         orderRepository.updateOrderStatus(orderId, newStatus);
         log.info("Updated order status for id={}", orderId);
         if (newStatus == OrderStatus.PAID) {
-            sendOrderPaidMessage(orderId);
+            createAndSavePayRequestMessage(orderId);
         }
     }
 
-    private void sendOrderPaidMessage(UUID orderId) {
-        OrderPaidRequestMessage bookedMessage = new OrderPaidRequestMessage(orderId);
-        kafkaTemplate.send(orderPaidTopic, orderId.toString(), bookedMessage);
+
+    private void createAndSavePayRequestMessage(UUID orderId) throws JsonProcessingException {
+        OrderPaidRequestMessage payRequest = new OrderPaidRequestMessage(orderId);
+
+        AsyncMessage asyncMessage = AsyncMessage.builder()
+                .id(UUID.randomUUID().toString())
+                .topic(orderPaidTopic)
+                .value(objectMapper.writeValueAsString(payRequest))
+                .type(AsyncMessageType.OUTBOX)
+                .status(AsyncMessageStatus.CREATED)
+                .build();
+
+        asyncMessageService.saveMessage(asyncMessage);
     }
 
 }

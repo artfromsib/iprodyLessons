@@ -49,7 +49,7 @@ server:
 logging:
   level:
     com.ym.orderservice: DEBUG
-    org.hibernate: DEBUG
+    org.hibernate: WARN
     org.springframework.transaction: DEBUG
 springdoc:
   api-docs:
