@@ -1,14 +1,20 @@
 package com.ym.deliveryservice.application.service;
 
 import com.ym.deliveryservice.domain.model.*;
+import com.ym.deliveryservice.integration.order.dto.response.DeliveryCreatedResponseMessage;
 import com.ym.deliveryservice.interfaces.dto.ShipmentResponseDTO;
 import com.ym.deliveryservice.interfaces.dto.ShipmentUpdateDTO;
 import com.ym.deliveryservice.interfaces.exception.ShipmentNotFoundException;
-import com.ym.deliveryservice.domain.model.*;
 import com.ym.deliveryservice.domain.repository.ShipmentRepository;
 import com.ym.deliveryservice.interfaces.dto.ShipmentRequestDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +31,9 @@ import java.util.stream.Collectors;
 public class ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
+    @Value("${kafka.service.delivery.delivery-creation-topic}")
+    private String deliveryCreationTopic;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Transactional
     public ShipmentResponseDTO createShipment(ShipmentRequestDTO request) {
@@ -104,9 +113,31 @@ public class ShipmentService {
                 savedShipment.getId().getValue(),
                 savedShipment.getOrderId().getValue(),
                 savedShipment.getTrackingNumber().getValue());
-
+        sendMessage(orderId, savedShipment);
         return ShipmentResponseDTO.fromDomain(savedShipment);
     }
+
+    private void sendMessage(OrderId orderId, Shipment savedShipment) {
+        var responseMessage = new DeliveryCreatedResponseMessage(
+                orderId.getValue(),
+                savedShipment.getId().getValue()
+        );
+
+        String idempotencyKey = UUID.randomUUID().toString();
+
+        Message<DeliveryCreatedResponseMessage> message = MessageBuilder
+                .withPayload(responseMessage)
+                .setHeader(KafkaHeaders.TOPIC, deliveryCreationTopic)
+                .setHeader(KafkaHeaders.KEY, savedShipment.getId().getValue())
+                .setHeader("X-Idempotency-Key", idempotencyKey)
+                .build();
+
+        kafkaTemplate.send(message);
+
+        log.info("Sent delivery creation message to Kafka for ID: {} with idempotency key: {}",
+                savedShipment.getId().getValue(), idempotencyKey);
+    }
+
     private TrackingNumber generateTrackingNumber() {
         String trackingNumber;
         do {
