@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ym.orderservice.application.exception.SendingAsyncMessageException;
 import com.ym.orderservice.application.service.AsyncMessageService;
 import com.ym.orderservice.infrastructure.persistence.entity.async.AsyncMessage;
-import com.ym.orderservice.integration.delivery.dto.request.OrderPaidRequestMessage;
+import com.ym.orderservice.infrastructure.web.dto.message.OrderCreationStatusMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -25,7 +25,7 @@ public class AsyncMessageSenderProcessor {
     @Transactional
     public void sendMessage(AsyncMessage message) {
         try {
-            var reqMessage = mapper.readValue(message.getValue(), OrderPaidRequestMessage.class);
+            OrderCreationStatusMessage reqMessage = mapper.readValue(message.getValue(), OrderCreationStatusMessage.class);
 
             kafkaTemplate.send(message.getTopic(), message.getId().getId(), reqMessage)
                     .whenComplete((result, ex) -> {

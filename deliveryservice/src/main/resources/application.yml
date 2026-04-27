@@ -77,6 +77,5 @@ resilience4j:
         waitDurationInOpenState: 10s
 kafka:
   service:
-    delivery:
-      order-paid-topic: order.paid
-      delivery-creation-topic: delivery.creation
+    order:
+      order-creation-status-topic: order.creation.status
