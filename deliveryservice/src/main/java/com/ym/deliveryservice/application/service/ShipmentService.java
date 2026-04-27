@@ -1,9 +1,9 @@
 package com.ym.deliveryservice.application.service;
 
 import com.ym.deliveryservice.domain.model.*;
-import com.ym.deliveryservice.integration.order.dto.response.DeliveryCreatedResponseMessage;
+import com.ym.deliveryservice.integration.order.dto.message.OrderCreationStatus;
+import com.ym.deliveryservice.integration.order.dto.message.OrderCreationStatusMessage;
 import com.ym.deliveryservice.interfaces.dto.ShipmentResponseDTO;
-import com.ym.deliveryservice.interfaces.dto.ShipmentUpdateDTO;
 import com.ym.deliveryservice.interfaces.exception.ShipmentNotFoundException;
 import com.ym.deliveryservice.domain.repository.ShipmentRepository;
 import com.ym.deliveryservice.interfaces.dto.ShipmentRequestDTO;
@@ -12,18 +12,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Currency;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +28,7 @@ import java.util.stream.Collectors;
 public class ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
-    @Value("${kafka.service.delivery.delivery-creation-topic}")
+    @Value("${kafka.service.order.order-creation-status-topic}")
     private String deliveryCreationTopic;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -113,29 +110,18 @@ public class ShipmentService {
                 savedShipment.getId().getValue(),
                 savedShipment.getOrderId().getValue(),
                 savedShipment.getTrackingNumber().getValue());
-        sendMessage(orderId, savedShipment);
+        sendStatusMessage(orderId, savedShipment != null);
         return ShipmentResponseDTO.fromDomain(savedShipment);
     }
-
-    private void sendMessage(OrderId orderId, Shipment savedShipment) {
-        var responseMessage = new DeliveryCreatedResponseMessage(
-                orderId.getValue(),
-                savedShipment.getId().getValue()
-        );
-
-        String idempotencyKey = UUID.randomUUID().toString();
-
-        Message<DeliveryCreatedResponseMessage> message = MessageBuilder
-                .withPayload(responseMessage)
-                .setHeader(KafkaHeaders.TOPIC, deliveryCreationTopic)
-                .setHeader(KafkaHeaders.KEY, savedShipment.getId().getValue())
-                .setHeader("X-Idempotency-Key", idempotencyKey)
+    private void sendStatusMessage(OrderId orderId,
+                                   boolean savedShipment) {
+        var statusMessage = OrderCreationStatusMessage.builder()
+                .orderId(UUID.fromString(orderId.getValue()))
+                .status(savedShipment ? OrderCreationStatus.DELIVERY_CREATED : OrderCreationStatus.DELIVERY_FAILED)
                 .build();
 
-        kafkaTemplate.send(message);
-
-        log.info("Sent delivery creation message to Kafka for ID: {} with idempotency key: {}",
-                savedShipment.getId().getValue(), idempotencyKey);
+        kafkaTemplate.send(deliveryCreationTopic, statusMessage);
+        log.info("Sent delivery creation message to Kafka for orderID: {}" , orderId);
     }
 
     private TrackingNumber generateTrackingNumber() {
@@ -149,84 +135,28 @@ public class ShipmentService {
         return new TrackingNumber(trackingNumber);
     }
 
-    @Transactional(readOnly = true)
-    public ShipmentResponseDTO getShipment(String id) {
-        Shipment shipment = findShipmentById(id);
-        return ShipmentResponseDTO.fromDomain(shipment);
-    }
 
-    @Transactional(readOnly = true)
-    public ShipmentResponseDTO getShipmentByTrackingNumber(String trackingNumber) {
-        TrackingNumber tn = new TrackingNumber(trackingNumber);
-        Shipment shipment = shipmentRepository.findByTrackingNumber(tn)
-                .orElseThrow(() -> new ShipmentNotFoundException(
-                        "Shipment not found with tracking number: " + trackingNumber));
-        return ShipmentResponseDTO.fromDomain(shipment);
-    }
 
-    @Transactional(readOnly = true)
-    public List<ShipmentResponseDTO> getAllShipments() {
-        return shipmentRepository.findAll().stream()
-                .map(ShipmentResponseDTO::fromDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<ShipmentResponseDTO> getShipmentsByStatus(String status) {
-        DeliveryStatus deliveryStatus;
-        try {
-            deliveryStatus = DeliveryStatus.valueOf(status.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid status: " + status);
-        }
-
-        return shipmentRepository.findByStatus(deliveryStatus).stream()
-                .map(ShipmentResponseDTO::fromDomain)
-                .collect(Collectors.toList());
-    }
 
     @Transactional
-    public ShipmentResponseDTO updateShipment(String id, ShipmentUpdateDTO updateDTO) {
-        Shipment shipment = findShipmentById(id);
-
-        if (updateDTO.getStatus() != null) {
-            switch (updateDTO.getStatus().toUpperCase()) {
-                case "WITH_COURIER":
-                    shipment.assignToCourier();
-                    break;
-                case "IN_TRANSIT":
-                    shipment.markInTransit();
-                    break;
-                case "DELIVERED":
-                    shipment.markAsDelivered();
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid status transition");
-            }
+    public void deleteShipmentByOrderId(OrderId orderId) {
+        if (orderId == null) {
+            throw new IllegalArgumentException("OrderId cannot be null or blank");
         }
 
-        if (updateDTO.getTrackingNumber() != null) {
-            shipment.updateTrackingNumber(updateDTO.getTrackingNumber());
+        Optional<Shipment> shipmentOptional = shipmentRepository.findByOrderId(orderId);
+
+        if (shipmentOptional.isEmpty()) {
+            log.warn("Shipment not found for orderId: {}", orderId);
+            throw new ShipmentNotFoundException("Shipment not found for orderId: " + orderId);
         }
 
-        if (updateDTO.getEstimatedDeliveryDate() != null) {
-            shipment.setEstimatedDeliveryDate(updateDTO.getEstimatedDeliveryDate());
-        }
-
-        Shipment updatedShipment = shipmentRepository.save(shipment);
-        log.info("Shipment updated with ID: {}", updatedShipment.getId().getValue());
-
-        return ShipmentResponseDTO.fromDomain(updatedShipment);
-    }
-
-    @Transactional
-    public void deleteShipment(String id) {
-        ShipmentId shipmentId = new ShipmentId(id);
-        if (!shipmentRepository.existsById(shipmentId)) {
-            throw new ShipmentNotFoundException("Shipment not found with id: " + id);
-        }
+        Shipment shipment = shipmentOptional.get();
+        ShipmentId shipmentId = shipment.getId();
         shipmentRepository.deleteById(shipmentId);
-        log.info("Shipment deleted with ID: {}", id);
+
+        log.info("Shipment deleted successfully for orderId: {}. Shipment ID: {}",
+                orderId, shipmentId.getValue());
     }
 
     private Shipment findShipmentById(String id) {
@@ -234,4 +164,5 @@ public class ShipmentService {
         return shipmentRepository.findById(shipmentId)
                 .orElseThrow(() -> new ShipmentNotFoundException("Shipment not found with id: " + id));
     }
+
 }

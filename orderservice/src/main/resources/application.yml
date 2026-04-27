@@ -19,10 +19,6 @@ spring:
     console:
       enabled: true
       path: /h2-console
-  rabbitmq:
-    username: admin
-    password: admin
-    addresses: amqp://localhost:5672
   kafka:
     bootstrap-servers: localhost:9093
     producer:
@@ -115,15 +111,8 @@ resilience4j:
 integration:
   payment-service:
     base-url: http://localhost:8081/api/payments
-rabbitmq:
-  service:
-    payment:
-      exchange-request-name: payment-request-exchange
-      queue-request-name: payment-request-queue
-      queue-response-name: payment-response-queue
 
 kafka:
   service:
-    delivery:
-      order-paid-topic: order.paid
-      delivery-creation-topic: delivery.creation
+    order:
+      order-creation-status-topic:  order.creation.status

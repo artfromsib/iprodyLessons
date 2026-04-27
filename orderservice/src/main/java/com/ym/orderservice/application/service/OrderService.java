@@ -1,7 +1,6 @@
 package com.ym.orderservice.application.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.ym.orderservice.application.exception.CustomerNotFoundException;
 import com.ym.orderservice.application.exception.OrderNotFoundException;
 import com.ym.orderservice.domain.model.aggregate.Order;
@@ -15,15 +14,13 @@ import com.ym.orderservice.infrastructure.persistence.repository.AddressJpaRepos
 import com.ym.orderservice.infrastructure.persistence.repository.CustomerJpaRepository;
 import com.ym.orderservice.infrastructure.web.dto.OrderRequest;
 import com.ym.orderservice.infrastructure.web.dto.OrderResponse;
-import com.ym.orderservice.integration.delivery.dto.request.OrderPaidRequestMessage;
-import com.ym.orderservice.integration.payment.config.properties.RabbitMqPaymentServiceProperties;
+import com.ym.orderservice.infrastructure.web.dto.message.OrderCreationStatus;
+import com.ym.orderservice.infrastructure.web.dto.message.OrderCreationStatusMessage;
 import com.ym.orderservice.integration.payment.dto.request.PayRequestDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -44,10 +41,8 @@ public class OrderService {
     private final CustomerJpaRepository customerJpaRepository;
     private final AddressJpaRepository addressJpaRepository;
 
-    private final RabbitTemplate rabbitTemplate;
-    private final RabbitMqPaymentServiceProperties props;
-    @Value("${kafka.service.delivery.order-paid-topic}")
-    private String orderPaidTopic;
+    @Value("${kafka.service.order.order-creation-status-topic}")
+    private String orderCreationTopic;
     private final AsyncMessageService asyncMessageService;
     private final ObjectMapper objectMapper;
 
@@ -154,45 +149,23 @@ public class OrderService {
     @Transactional
     public Order createOrder(OrderRequest request) {
         Order order = createAndSaveOrder(request, OrderStatus.CREATED);
-        sendPayMessage(order);
+        createAndSaveOrderCreationStatusMessage(order, OrderCreationStatus.ORDER_CREATE);
         return order;
     }
 
-    private void sendPayMessage(Order order) {
-        PayRequestDTO requestMessage = PayRequestDTO.builder().orderId(order.getId())
+    private void createAndSaveOrderCreationStatusMessage(Order order, OrderCreationStatus status) {
+        OrderCreationStatusMessage orderMessage = OrderCreationStatusMessage.builder()
+                .orderId(order.getId())
+                .customerId(order.getCustomer().getId())
                 .amount(order.getTotalAmount())
                 .currency(Currency.getInstance("USD"))
-                .customerId(order.getCustomer().getId())
+                .status(status)
                 .build();
-
-        rabbitTemplate.convertAndSend(
-                props.exchangeRequestName(),
-                props.queueRequestName(),
-                requestMessage
-        );
-        log.info("Sent pay request for orderId={}", order.getId());
-    }
-
-    @Transactional
-    public void changeOrderStatus(UUID orderId,
-                                  boolean paid) throws JsonProcessingException {
-        OrderStatus newStatus = paid ? OrderStatus.PAID : OrderStatus.PAYMENT_FAILED;
-        log.info("Changing status for orderId={} to={}", orderId, newStatus);
-        orderRepository.updateOrderStatus(orderId, newStatus);
-        log.info("Updated order status for id={}", orderId);
-        if (newStatus == OrderStatus.PAID) {
-            createAndSavePayRequestMessage(orderId);
-        }
-    }
-
-
-    private void createAndSavePayRequestMessage(UUID orderId) throws JsonProcessingException {
-        OrderPaidRequestMessage payRequest = new OrderPaidRequestMessage(orderId);
 
         AsyncMessage asyncMessage = AsyncMessage.builder()
                 .id(UUID.randomUUID().toString())
-                .topic(orderPaidTopic)
-                .value(objectMapper.writeValueAsString(payRequest))
+                .topic(orderCreationTopic)
+                .value(objectMapper.writeValueAsString(orderMessage))
                 .type(AsyncMessageType.OUTBOX)
                 .status(AsyncMessageStatus.CREATED)
                 .build();
@@ -200,4 +173,19 @@ public class OrderService {
         asyncMessageService.saveMessage(asyncMessage);
     }
 
+    @Transactional
+    public void changeOrderStatus(UUID orderId,
+                                  OrderStatus status) {
+        log.info("Changing status for orderId={} to={}", orderId, status);
+        orderRepository.updateOrderStatus(orderId, status);
+        log.info("Updated order status for id={}", orderId);
+    }
+    @Transactional
+    public void cancelAppointment(UUID orderId) {
+        log.info("Cancelling order by id = " + orderId);
+        orderRepository.updateOrderStatus(orderId, OrderStatus.CANCELLED);
+        Order order = orderRepository.findById(orderId).orElseThrow(EntityNotFoundException::new);
+        createAndSaveOrderCreationStatusMessage(order, OrderCreationStatus.CANCEL);
+        log.info("Order was canceled by id = " + orderId);
+    }
 }

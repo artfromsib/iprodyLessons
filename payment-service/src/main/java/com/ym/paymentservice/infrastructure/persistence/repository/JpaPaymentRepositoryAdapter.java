@@ -1,12 +1,15 @@
 package com.ym.paymentservice.infrastructure.persistence.repository;
 
 
+import com.ym.paymentservice.domain.model.OrderId;
 import com.ym.paymentservice.domain.model.Payment;
 import com.ym.paymentservice.domain.model.PaymentId;
 import com.ym.paymentservice.domain.repository.PaymentRepository;
 import com.ym.paymentservice.infrastructure.persistence.entity.PaymentEntity;
 import com.ym.paymentservice.infrastructure.persistence.mapper.PaymentMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -48,5 +51,10 @@ public class JpaPaymentRepositoryAdapter implements PaymentRepository {
     @Override
     public boolean existsById(PaymentId id) {
         return jpaPaymentRepository.existsById(id.getValue());
+    }
+
+    @Override
+    public void deleteByOrderId(OrderId orderId) {
+        deleteByOrderId(orderId);
     }
 }
