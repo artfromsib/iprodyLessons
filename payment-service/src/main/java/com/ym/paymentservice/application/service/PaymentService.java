@@ -12,7 +12,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Currency;
 import java.util.UUID;
 
 @Service
@@ -27,13 +29,13 @@ public class PaymentService {
 
 
     @Transactional
-    public void createPayment(OrderCreationStatusMessage message) {
+    public void createPayment(UUID orderIdVar, Long customerIdVar, BigDecimal amount, Currency currency) {
         boolean paid;
         PaymentId paymentId = new PaymentId(UUID.randomUUID().toString());
-        OrderId orderId = new OrderId(message.orderId().toString());
-        CustomerId customerId = new CustomerId(message.customerId());
+        OrderId orderId = new OrderId(orderIdVar.toString());
+        CustomerId customerId = new CustomerId(customerIdVar);
 
-        Cost cost = new Cost(message.amount(),message.currency());
+        Cost cost = new Cost(amount,currency);
 
         Payment payment = Payment.builder()
                 .id(paymentId)
