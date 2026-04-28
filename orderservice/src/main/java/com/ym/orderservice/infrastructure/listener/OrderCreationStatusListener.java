@@ -39,7 +39,7 @@ public class OrderCreationStatusListener {
             log.info("Received status message '%s' and changed order status to '%s'"
                 .formatted(messageStatus, OrderStatus.PAID));
 
-        } else if (messageStatus == OrderCreationStatus.DELIVERY_CREATED) {
+        } else if (messageStatus == OrderCreationStatus.SHIPPED) {
             orderService.changeOrderStatus(message.orderId(), OrderStatus.SHIPPED);
             log.info("Received status message '%s' and changed order status to '%s'"
                 .formatted(messageStatus, OrderStatus.SHIPPED));

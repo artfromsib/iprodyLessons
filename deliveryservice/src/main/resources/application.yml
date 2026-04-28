@@ -79,3 +79,6 @@ kafka:
   service:
     order:
       order-creation-status-topic: order.creation.status
+    delivery:
+      delivery-create-request: delivery.create.request
+      delivery-delete-request: delivery.delete.request

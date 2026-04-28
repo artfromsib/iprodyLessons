@@ -116,3 +116,9 @@ kafka:
   service:
     order:
       order-creation-status-topic:  order.creation.status
+    payment:
+      payment-order-request-topic: payment.order.create.request
+      payment-cancellation-request-topic: payment.cancellation.release.request
+    delivery:
+      delivery-create-request: delivery.create.request
+      delivery-delete-request: delivery.delete.request

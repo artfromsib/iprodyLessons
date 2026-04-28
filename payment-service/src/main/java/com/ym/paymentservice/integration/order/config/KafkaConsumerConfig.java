@@ -44,7 +44,7 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, OrderCreationStatusMessage>
-    orderPaidKafkaListenerContainerFactory() {
+    kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, OrderCreationStatusMessage> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(orderPaidConsumerFactory());
