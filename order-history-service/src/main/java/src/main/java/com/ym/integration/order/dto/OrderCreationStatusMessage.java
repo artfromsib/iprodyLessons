@@ -1,9 +1,8 @@
-package com.ym.orderservice.infrastructure.web.dto.message;
+package src.main.java.com.ym.integration.order.dto;
 
 import lombok.Builder;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 import java.util.Currency;
 import java.util.UUID;
 
@@ -11,9 +10,9 @@ import java.util.UUID;
 public record OrderCreationStatusMessage (
         UUID orderId,
         OrderCreationStatus status,
+        String trackingNumber,
         Long customerId,
         BigDecimal amount,
-        Currency currency,
-        String trackingNumber
+        Currency currency
 ){
 }
