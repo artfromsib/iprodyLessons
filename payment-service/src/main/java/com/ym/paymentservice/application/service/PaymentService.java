@@ -53,15 +53,16 @@ public class PaymentService {
             paid = false;
         }
         log.info("Payment created with ID: {}", savedPayment.getId().getValue());
-        sendStatusMessage(UUID.fromString(orderId.getValue()), paid);
+        sendStatusMessage(UUID.fromString(orderId.getValue()), paid, amount);
     }
 
 
     private void sendStatusMessage(UUID orderId,
-                                   boolean paid) {
+                                   boolean paid, BigDecimal amount) {
         var statusMessage = OrderCreationStatusMessage.builder()
                 .orderId(orderId)
                 .status(paid ? OrderCreationStatus.PAYMENT_SUCCESSFUL : OrderCreationStatus.PAYMENT_FAILED)
+                .amount(amount)
                 .build();
 
         kafkaTemplate.send(orderCreationTopic, statusMessage);

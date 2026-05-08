@@ -110,13 +110,14 @@ public class ShipmentService {
                 savedShipment.getId().getValue(),
                 savedShipment.getOrderId().getValue(),
                 savedShipment.getTrackingNumber().getValue());
-        sendStatusMessage(orderId, savedShipment != null);
+        sendStatusMessage(orderId, savedShipment != null, trackingNumber);
         return ShipmentResponseDTO.fromDomain(savedShipment);
     }
     private void sendStatusMessage(OrderId orderId,
-                                   boolean savedShipment) {
+                                   boolean savedShipment, TrackingNumber trackingNumber) {
         var statusMessage = OrderCreationStatusMessage.builder()
                 .orderId(UUID.fromString(orderId.getValue()))
+                .trackingNumber(trackingNumber.getValue())
                 .status(savedShipment ? OrderCreationStatus.DELIVERY_CREATED : OrderCreationStatus.DELIVERY_FAILED)
                 .build();
 

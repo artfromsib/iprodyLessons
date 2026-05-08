@@ -12,6 +12,7 @@ public record OrderCreationStatusMessage (
         OrderCreationStatus status,
         Long customerId,
         BigDecimal amount,
-        Currency currency
+        Currency currency,
+        String trackingNumber
 ){
 }
